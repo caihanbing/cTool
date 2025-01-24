@@ -1,43 +1,25 @@
-/* 基础重置 */
+/* ==================== 基础重置 ==================== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* 基础布局 */
+/* ==================== 基础布局 ==================== */
 body {
-    font-family: 'Fira Code', monospace;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     min-width: 500px;
     padding: 12px;
     background: #f0f2f5;
 }
 
-/* ==================== 基础字体设置 ==================== */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-        Oxygen, Ubuntu, Cantarell, sans-serif;
-    /* 系统默认字体栈 */
-}
-
-/* 代码相关元素使用优雅的等宽字体 */
-textarea,
-pre,
-#data-output,
-.request-url-editor,
-.request-payload-editor {
-    font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-/* 主容器 */
+/* ==================== 主容器样式 ==================== */
 .container {
     max-width: 800px;
     margin: 0 auto;
 }
 
-/* 标题样式 */
+/* ==================== 标题系统 ==================== */
 h1 {
     font-size: 24px;
     margin-bottom: 20px;
@@ -54,19 +36,24 @@ h3 {
     margin: 10px 0;
 }
 
-/* 输入区域通用样式 */
-textarea {
+/* ==================== CURL输入区 ==================== */
+.curl-section {
+    margin-bottom: 32px;
+}
+
+#curl-input {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-family: 'Fira Code', monospace;
+    font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
+    line-height: 1.5;
     resize: vertical;
     margin: 5px 0;
 }
 
-/* 按钮组布局 */
+/* ==================== 按钮组样式 ==================== */
 .button-group {
     display: flex;
     gap: 8px;
@@ -91,17 +78,32 @@ button:hover {
     background: #d0d3d6;
 }
 
-/* 请求/响应区块 */
-.request-section,
-.response-section {
+/* ==================== 请求参数区 ==================== */
+.request-section {
     border: 1px solid #ddd;
     border-radius: 6px;
     padding: 15px;
     margin: 15px 0;
 }
 
-/* 表格样式 */
-table {
+.request-url-section {
+    margin-bottom: 15px;
+}
+
+.request-url-editor {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    margin: 5px 0;
+}
+
+/* ==================== 请求头表格 ==================== */
+#request-headers-table {
     width: 100%;
     border-collapse: collapse;
     margin: 10px 0;
@@ -118,7 +120,46 @@ th {
     background: #f8f9fa;
 }
 
-/* 响应数据展示 */
+.empty-row td {
+    color: #999;
+    text-align: center;
+    padding: 15px;
+}
+
+/* ==================== Payload编辑器 ==================== */
+.request-payload-section {
+    margin-top: 15px;
+}
+
+.request-payload-editor {
+    width: 100%;
+    min-height: 100px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    margin: 5px 0;
+}
+
+/* ==================== 响应区 ==================== */
+.response-section {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+/* ==================== 响应头表格 ==================== */
+#response-headers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+/* ==================== 响应数据展示 ==================== */
 #data-output {
     background: #f8f9fa;
     padding: 12px;
@@ -127,11 +168,41 @@ th {
     max-height: 300px;
     overflow: auto;
     white-space: pre-wrap;
+    font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
 }
 
-/* 空状态提示 */
-.empty-row td {
-    color: #999;
-    text-align: center;
-    padding: 15px;
+/* ==================== 下载按钮 ==================== */
+.download-button {
+    margin-top: 12px;
+    background: #27ae60;
+    color: white;
+}
+
+.download-button:hover {
+    background: #219a52;
+}
+
+/* 默认隐藏请求和响应区块 */
+.request-section,
+.response-section {
+    display: none;
+}
+
+/* 显示时的样式 */
+.request-section.active,
+.response-section.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
