@@ -1,0 +1,137 @@
+/* 基础重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 基础布局 */
+body {
+    font-family: 'Fira Code', monospace;
+    min-width: 500px;
+    padding: 12px;
+    background: #f0f2f5;
+}
+
+/* ==================== 基础字体设置 ==================== */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        Oxygen, Ubuntu, Cantarell, sans-serif;
+    /* 系统默认字体栈 */
+}
+
+/* 代码相关元素使用优雅的等宽字体 */
+textarea,
+pre,
+#data-output,
+.request-url-editor,
+.request-payload-editor {
+    font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* 主容器 */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 标题样式 */
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 20px;
+    margin: 15px 0;
+}
+
+h3 {
+    font-size: 16px;
+    color: #666;
+    margin: 10px 0;
+}
+
+/* 输入区域通用样式 */
+textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    resize: vertical;
+    margin: 5px 0;
+}
+
+/* 按钮组布局 */
+.button-group {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #e1e4e8;
+    transition: background 0.2s;
+}
+
+button.primary {
+    background: #2185d0;
+    color: white;
+}
+
+button:hover {
+    background: #d0d3d6;
+}
+
+/* 请求/响应区块 */
+.request-section,
+.response-section {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+/* 表格样式 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #f8f9fa;
+}
+
+/* 响应数据展示 */
+#data-output {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 10px 0;
+    max-height: 300px;
+    overflow: auto;
+    white-space: pre-wrap;
+}
+
+/* 空状态提示 */
+.empty-row td {
+    color: #999;
+    text-align: center;
+    padding: 15px;
+}

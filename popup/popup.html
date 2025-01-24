@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Curl Tool</h1>
+
+        <div class="curl-section" id="curl-section">
+            <h2>Curl</h2>
+            <textarea id="curl-input" spellcheck="false"></textarea>
+            <div class="button-group">
+                <button id="send-btn" class="primary">Send</button>
+                <button id="parse-btn">Parse</button>
+                <button id="clear-btn">Clear</button>
+            </div>
+        </div>
+
+        <div class="request-section" id="request-section">
+            <h2>Request</h2>
+
+            <div class="request-url-section" id="request-url-section">
+                <h3>Url</h3>
+                <textarea id="request-url-editor" class="request-url-editor"></textarea>
+            </div>
+
+            <div class="request-headers-section" id="request-headers-section">
+                <h3>Headers</h3>
+                <table id="request-headers-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="empty-row">
+                            <td colspan="2">No headers found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="request-payload-section" id="request-payload-section">
+                <h3>Payload</h3>
+                <textarea id="request-payload-editor" class="request-payload-editor"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button id="update-btn" class="primary">Update</button>
+            </div>
+        </div>
+
+        <div class="response-section" id="response-section">
+            <h2>Response</h2>
+
+            <div class="response-headers-section" id="response-headers-section">
+                <h3>Headers</h3>
+                <table id="response-headers-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="empty-row">
+                            <td colspan="2">No headers found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="response-data-section" id="response-data-section">
+                <h3>Data</h3>
+                <pre id="data-output"></pre>
+                <button id="download-btn" class="download-button" disabled>Download</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
