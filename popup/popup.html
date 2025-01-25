@@ -20,11 +20,33 @@
         </div>
 
         <div class="request-section" id="request-section">
-            <h2>Request</h2>
+            <h2>Request<span class="request-method" id="request-method"></span></h2>
 
             <div class="request-url-section" id="request-url-section">
                 <h3>Url</h3>
-                <textarea id="request-url-editor" class="request-url-editor"></textarea>
+                <textarea id="request-url-editor" class="request-url-editor" spellcheck="false"></textarea>
+            </div>
+
+            <div class="request-parameters-section" id="request-parameters-section">
+                <h3>Parameters</h3>
+                <table id="request-parameters-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="empty-row">
+                            <td colspan="2">No parameters found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="request-payload-section" id="request-payload-section">
+                <h3>Payload</h3>
+                <textarea id="request-payload-editor" class="request-payload-editor" spellcheck="false"></textarea>
             </div>
 
             <div class="request-headers-section" id="request-headers-section">
@@ -44,11 +66,6 @@
                 </table>
             </div>
 
-            <div class="request-payload-section" id="request-payload-section">
-                <h3>Payload</h3>
-                <textarea id="request-payload-editor" class="request-payload-editor"></textarea>
-            </div>
-
             <div class="button-group">
                 <button id="update-btn" class="primary">Update</button>
             </div>
@@ -56,6 +73,12 @@
 
         <div class="response-section" id="response-section">
             <h2>Response</h2>
+
+            <div class="response-data-section" id="response-data-section">
+                <h3>Data</h3>
+                <pre id="data-output"></pre>
+                <button id="download-btn" class="download-button" disabled>Download</button>
+            </div>
 
             <div class="response-headers-section" id="response-headers-section">
                 <h3>Headers</h3>
@@ -73,15 +96,10 @@
                     </tbody>
                 </table>
             </div>
-
-            <div class="response-data-section" id="response-data-section">
-                <h3>Data</h3>
-                <pre id="data-output"></pre>
-                <button id="download-btn" class="download-button" disabled>Download</button>
-            </div>
         </div>
     </div>
 
+    <script src="curlParse.js"></script>
     <script src="popup.js"></script>
 </body>
 

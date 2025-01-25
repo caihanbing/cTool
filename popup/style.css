@@ -36,12 +36,13 @@ h3 {
     margin: 10px 0;
 }
 
-/* ==================== CURL输入区 ==================== */
+/* ==================== Curl 输入区 ==================== */
 .curl-section {
     margin-bottom: 32px;
 }
 
 #curl-input {
+    height: 100px;
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
@@ -53,7 +54,7 @@ h3 {
     margin: 5px 0;
 }
 
-/* ==================== 按钮组样式 ==================== */
+/* 按钮组样式 */
 .button-group {
     display: flex;
     gap: 8px;
@@ -78,7 +79,7 @@ button:hover {
     background: #d0d3d6;
 }
 
-/* ==================== 请求参数区 ==================== */
+/* ==================== 请求区 ==================== */
 .request-section {
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -86,11 +87,37 @@ button:hover {
     margin: 15px 0;
 }
 
+/* ==================== Request Method 标记样式 ==================== */
+#request-method {
+    display: inline-block;
+    /* 使标记成为内联块元素 */
+    padding: 2px 6px;
+    /* 增加内边距 */
+    margin-left: 8px;
+    /* 与标题保持间距 */
+    font-size: 0.7em;
+    /* 调整字体大小 */
+    color: #2b7a2b;
+    /* 深绿色文字颜色 */
+    background-color: #e6f8e6;
+    /* 浅绿色背景色 */
+    border: 1px solid #a5d6a5;
+    /* 浅绿色边框 */
+    border-radius: 4px;
+    /* 圆角边框 */
+    font-weight: bold;
+    /* 文字加粗 */
+    vertical-align: middle;
+    /* 垂直居中对齐标题 */
+}
+
+/* 请求 URL 编辑器样式 */
 .request-url-section {
     margin-bottom: 15px;
 }
 
 .request-url-editor {
+    height: 40px;
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
@@ -102,11 +129,24 @@ button:hover {
     margin: 5px 0;
 }
 
-/* ==================== 请求头表格 ==================== */
-#request-headers-table {
+/* 请求参数表格样式 */
+.request-parameters-section {
+    margin-top: 15px;
+}
+
+#request-parameters-table {
     width: 100%;
     border-collapse: collapse;
     margin: 10px 0;
+    table-layout: fixed;
+}
+
+#request-parameters-table th:nth-child(1) {
+    width: 30%;
+}
+
+#request-parameters-table th:nth-child(2) {
+    width: 70%;
 }
 
 th,
@@ -126,12 +166,13 @@ th {
     padding: 15px;
 }
 
-/* ==================== Payload编辑器 ==================== */
+/* 请求 Payload 编辑器样式 */
 .request-payload-section {
     margin-top: 15px;
 }
 
 .request-payload-editor {
+    height: 200px;
     width: 100%;
     min-height: 100px;
     padding: 8px;
@@ -144,6 +185,33 @@ th {
     margin: 5px 0;
 }
 
+/* 请求头表格样式 */
+.request-headers-section {
+    margin-top: 15px;
+}
+
+#request-headers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    table-layout: fixed;
+}
+
+#request-headers-table th:nth-child(1) {
+    width: 30%;
+}
+
+#request-headers-table th:nth-child(2) {
+    width: 70%;
+}
+
+#request-headers-table td {
+    white-space: normal;
+    word-break: break-word;
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 13px;
+}
+
 /* ==================== 响应区 ==================== */
 .response-section {
     border: 1px solid #ddd;
@@ -152,14 +220,11 @@ th {
     margin: 15px 0;
 }
 
-/* ==================== 响应头表格 ==================== */
-#response-headers-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0;
+/* 响应数据展示样式 */
+.response-data-section {
+    margin-top: 15px;
 }
 
-/* ==================== 响应数据展示 ==================== */
 #data-output {
     background: #f8f9fa;
     padding: 12px;
@@ -173,7 +238,6 @@ th {
     line-height: 1.5;
 }
 
-/* ==================== 下载按钮 ==================== */
 .download-button {
     margin-top: 12px;
     background: #27ae60;
@@ -184,13 +248,39 @@ th {
     background: #219a52;
 }
 
-/* 默认隐藏请求和响应区块 */
+/* 响应头表格样式 */
+.response-headers-section {
+    margin-top: 15px;
+}
+
+#response-headers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    table-layout: fixed;
+}
+
+#response-headers-table th:nth-child(1) {
+    width: 30%;
+}
+
+#response-headers-table th:nth-child(2) {
+    width: 70%;
+}
+
+#response-headers-table td {
+    white-space: normal;
+    word-break: break-word;
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 13px;
+}
+
+/* 默认隐藏的区块样式 */
 .request-section,
 .response-section {
     display: none;
 }
 
-/* 显示时的样式 */
 .request-section.active,
 .response-section.active {
     display: block;
