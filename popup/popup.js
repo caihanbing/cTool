@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const parametersTable = document.getElementById('request-parameters-table').querySelector('tbody');
     const headersTable = document.getElementById('request-headers-table').querySelector('tbody');
     const payloadEditor = document.getElementById('request-payload-editor');
+    const updateBtn = document.getElementById('update-btn');
 
     const responseSection = document.getElementById('response-section');
 
@@ -178,5 +179,78 @@ document.addEventListener('DOMContentLoaded', () => {
         // 隐藏区块
         requestSection.classList.remove('active');
         responseSection.classList.remove('active');
+    });
+
+    updateBtn.addEventListener('click', () => {
+        try {
+            // 获取 Request 部分的内容
+            const url = urlEditor.value.trim();
+            const requestMethod = method.textContent.trim() || 'GET';
+            const headers = Array.from(headersTable.querySelectorAll('tr')).reduce((acc, row) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 2) {
+                    const name = cells[0].textContent.trim();
+                    const value = cells[1].textContent.trim();
+                    if (name && value) acc[name] = value;
+                }
+                return acc;
+            }, {});
+
+            const parameters = Array.from(parametersTable.querySelectorAll('tr')).reduce((acc, row) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 2) {
+                    const name = cells[0].textContent.trim();
+                    const value = cells[1].textContent.trim();
+                    if (name && value) acc[name] = value;
+                }
+                return acc;
+            }, {});
+
+            const payload = payloadEditor.value.trim();
+
+            // 处理查询参数
+            let urlWithParams = url;
+            if (Object.keys(parameters).length > 0) {
+                const queryString = Object.entries(parameters)
+                    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+                    .join('&');
+                urlWithParams = `${url}?${queryString}`;
+            }
+
+            // 判断是否需要添加 -X 参数
+            const hasPayload = (requestMethod === 'POST' || requestMethod === 'PUT') && payload;
+            const methodPart = (requestMethod !== 'GET' && !hasPayload) ? ` -X ${requestMethod}` : '';
+
+            // 构建命令行数组
+            const lines = [];
+            lines.push(`curl${methodPart} '${urlWithParams}'`); // 首行
+
+            // 添加 Headers
+            Object.entries(headers).forEach(([name, value]) => {
+                lines.push(`  -H '${name}: ${value}'`);
+            });
+
+            // 添加 Payload（如果存在）
+            if (hasPayload) {
+                lines.push(`  --data-raw '${payload}'`);
+            }
+
+            // 生成格式化后的 curl 命令
+            let curlCommand;
+            if (lines.length === 1) {
+                curlCommand = lines[0];
+            } else {
+                curlCommand = lines.map((line, index) =>
+                    index < lines.length - 1 ? `${line} \\` : line
+                ).join('\n');
+            }
+
+            // 填充到输入框
+            curlInput.value = curlCommand;
+            alert('curl command update succeeded.');
+        } catch (error) {
+            console.error('更新 Curl 命令失败:', error);
+            alert(`更新错误: ${error.message}`);
+        }
     });
 });

@@ -52,4 +52,4 @@ function parseCurlCommand(curlCommand) {
 const data = fs.readFileSync('test.txt', 'utf-8');
 console.log('文件内容:', data);
 const result = parseCurlCommand(data)
-console.log('解析内容:', JSON.stringify(result, null, 2));
+console.log('解析内容:', result);
