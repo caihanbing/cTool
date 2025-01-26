@@ -13,8 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const headersTable = document.getElementById('request-headers-table').querySelector('tbody');
     const payloadEditor = document.getElementById('request-payload-editor');
     const updateBtn = document.getElementById('update-btn');
-
+    const historyBtn = document.getElementById('history-btn');
     const responseSection = document.getElementById('response-section');
+
+    // 历史记录存储键名
+    const CURL_HISTORY_KEY = 'curlHistory';
+
+    // 初始化历史记录
+    let curlHistory = JSON.parse(localStorage.getItem(CURL_HISTORY_KEY)) || [];
 
     // 缓存需要清空的元素
     const clearableElements = {
@@ -110,6 +116,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 更新 UI
             responseSection.classList.add('active');
+
+            // 保存命令
+            const now = new Date();
+            const utcOffset = 8 * 60 * 60 * 1000; // 东八区偏移时间（毫秒）
+            const localTime = new Date(now.getTime() + utcOffset);
+            // 格式化时间为 YYYY-MM-DD HH-MM-SS
+            const formattedTime = localTime
+                .toISOString()
+                .replace('T', ' ')
+                .replace(/:/g, '-')
+                .split('.')[0];
+            const record = {
+                time: formattedTime,
+                curl: curlCommand,
+                data: parsedData,
+                succeed: true
+            }
+            curlHistory.unshift(record)
+            // 限制最多保存10条
+            if (curlHistory.length > 10) {
+                curlHistory = curlHistory.slice(0, 10);
+            }
+            localStorage.setItem(CURL_HISTORY_KEY, JSON.stringify(curlHistory));
+
         } catch (error) {
             console.error('发送请求失败:', error);
             alert(`请求错误: ${error.message}`);
@@ -272,4 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    historyBtn.addEventListener('click', () => {
+        window.open('history.html', 'historyWindow', 'width=700,height=400,menubar=no,toolbar=no');
+    });
 });

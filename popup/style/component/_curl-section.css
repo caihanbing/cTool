@@ -5,3 +5,10 @@
     padding: 15px;
     margin: 10px 0;
 }
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}

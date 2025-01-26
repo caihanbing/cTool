@@ -25,3 +25,8 @@ button.primary {
     /* 字体颜色 */
     color: white;
 }
+
+#history-btn {
+    /* 右对齐 */
+    margin-left: auto;
+}
