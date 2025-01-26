@@ -6,18 +6,24 @@
     margin: 10px 0;
 }
 
+/* 多行文本框显示器 */
 .multi-display {
-    max-height: 300px;
     width: 100%;
-    padding: 8px;
+    min-height: 300px;
+    max-height: 400px;
+    resize: vertical;
+    margin: 5px 0;
+
     border: 1px solid #ddd;
     border-radius: 4px;
+    background-color: white;
+
     font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
-    resize: vertical;
-    margin: 5px 0;
+    padding: 8px;
+
     overflow: auto;
+    /* 保留空格和换行符 */
     white-space: pre-wrap;
-    background-color: white;
 }

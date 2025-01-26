@@ -1,31 +1,38 @@
-/* 编辑器 */
+/* 多行文本框编辑器 */
 .multi-editor {
-    height: 200px;
     /* 占满父容器宽度 */
     width: 100%;
-    /* 文本与边框的边距 */
-    padding: 3px;
+    min-height: 200px;
+    max-height: 400px;
+    /* 允许垂直调整 */
+    resize: vertical;
+    margin: 5px 0;
+
     /* 浅灰色边框 */
     border: 1px solid #ddd;
     /* 圆角半径 */
     border-radius: 4px;
+
     font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
-    /* 允许垂直调整 */
-    resize: vertical;
-    margin: 5px 0;
+    /* 文本与边框的边距 */
+    padding: 10px;
 }
 
+/* 双行文本框编辑器 */
 .double-editor {
-    height: 50px;
     width: 100%;
-    padding: 8px;
+    min-height: 55px;
+    max-height: 200px;
+    resize: vertical;
+    margin: 5px 0;
+
     border: 1px solid #ddd;
     border-radius: 4px;
+
     font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
-    resize: vertical;
-    margin: 5px 0;
+    padding: 10px;
 }
