@@ -10,7 +10,7 @@
       <h1>cTool</h1>
 
       <!-- curl -->
-      <div id="curl-section" class="curl-section">
+      <div id="curl-section">
         <h2>Curl</h2>
         <textarea
           id="curl-input"
@@ -25,12 +25,12 @@
       </div>
 
       <!-- request -->
-      <div id="request-section" class="request-section">
-        <h2>Request<span id="request-method" class="request-method"></span></h2>
+      <div id="request-section">
+        <h2>Request <span id="request-method"></span></h2>
 
         <!-- url -->
-        <div id="request-url-section" class="request-url-section">
-          <h3>Url</h3>
+        <div id="request-url-section">
+          <h3><span class="toggle-arrow">▼</span> Url</h3>
           <textarea
             id="request-url-editor"
             class="double-editor"
@@ -40,7 +40,7 @@
 
         <!-- parameters -->
         <div id="request-parameters-section">
-          <h3>Parameters</h3>
+          <h3><span class="toggle-arrow">▼</span> Parameters</h3>
           <table id="request-parameters-table" class="table-display">
             <thead>
               <tr>
@@ -57,8 +57,8 @@
         </div>
 
         <!-- payload -->
-        <div id="request-payload-section" class="request-payload-section">
-          <h3>Payload</h3>
+        <div id="request-payload-section">
+          <h3><span class="toggle-arrow">▼</span> Payload</h3>
           <textarea
             id="request-payload-editor"
             class="multi-editor"
@@ -95,16 +95,16 @@
       </div>
 
       <!-- response -->
-      <div id="response-section" class="response-section">
+      <div id="response-section">
         <h2>Response</h2>
 
         <!-- data -->
-        <div id="response-data-section" class="response-data-section">
-          <h3>Data</h3>
+        <div id="response-data-section">
+          <h3><span class="toggle-arrow">▼</span> Data</h3>
           <pre id="data-output" class="multi-display"></pre>
-          <button id="download-btn" class="download-button" disabled>
-            Download
-          </button>
+          <div class="button-group">
+            <button id="download-btn" class="primary" disabled>Download</button>
+          </div>
         </div>
 
         <!-- headers -->
