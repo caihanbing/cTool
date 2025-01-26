@@ -1,106 +1,137 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../style/main.css" />
+  </head>
 
-<head>
-    <link rel="stylesheet" href="../style/style.css">
-</head>
-
-<body>
+  <body>
     <div class="container">
-        <h1>cTool</h1>
+      <h1>cTool</h1>
 
-        <div class="curl-section" id="curl-section">
-            <h2>Curl</h2>
-            <textarea id="curl-input" spellcheck="false"></textarea>
-            <div class="button-group">
-                <button id="send-btn" class="primary">Send</button>
-                <button id="parse-btn">Parse</button>
-                <button id="clear-btn">Clear</button>
-            </div>
+      <!-- curl -->
+      <div id="curl-section" class="curl-section">
+        <h2>Curl</h2>
+        <textarea
+          id="curl-input"
+          class="multi-editor"
+          spellcheck="false"
+        ></textarea>
+        <div class="button-group">
+          <button id="send-btn" class="primary">Send</button>
+          <button id="parse-btn">Parse</button>
+          <button id="clear-btn">Clear</button>
+        </div>
+      </div>
+
+      <!-- request -->
+      <div id="request-section" class="request-section">
+        <h2>Request<span id="request-method" class="request-method"></span></h2>
+
+        <!-- url -->
+        <div id="request-url-section" class="request-url-section">
+          <h3>Url</h3>
+          <textarea
+            id="request-url-editor"
+            class="double-editor"
+            spellcheck="false"
+          ></textarea>
         </div>
 
-        <div class="request-section" id="request-section">
-            <h2>Request<span class="request-method" id="request-method"></span></h2>
-
-            <div class="request-url-section" id="request-url-section">
-                <h3>Url</h3>
-                <textarea id="request-url-editor" class="request-url-editor" spellcheck="false"></textarea>
-            </div>
-
-            <div class="request-parameters-section" id="request-parameters-section">
-                <h3>Parameters</h3>
-                <table id="request-parameters-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="empty-row">
-                            <td colspan="2">No parameters found</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="request-payload-section" id="request-payload-section">
-                <h3>Payload</h3>
-                <textarea id="request-payload-editor" class="request-payload-editor" spellcheck="false"></textarea>
-            </div>
-
-            <div class="request-headers-section" id="request-headers-section">
-                <h3>Headers</h3>
-                <table id="request-headers-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="empty-row">
-                            <td colspan="2">No headers found</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="button-group">
-                <button id="update-btn" class="primary">Update</button>
-            </div>
+        <!-- parameters -->
+        <div id="request-parameters-section">
+          <h3>Parameters</h3>
+          <table id="request-parameters-table" class="table-display">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="empty-row">
+                <td colspan="2">No parameters found</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="response-section" id="response-section">
-            <h2>Response</h2>
-
-            <div class="response-data-section" id="response-data-section">
-                <h3>Data</h3>
-                <pre id="data-output"></pre>
-                <button id="download-btn" class="download-button" disabled>Download</button>
-            </div>
-
-            <div class="response-headers-section" id="response-headers-section">
-                <h3>Headers</h3>
-                <table id="response-headers-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="empty-row">
-                            <td colspan="2">No headers found</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- payload -->
+        <div id="request-payload-section" class="request-payload-section">
+          <h3>Payload</h3>
+          <textarea
+            id="request-payload-editor"
+            class="multi-editor"
+            spellcheck="false"
+          ></textarea>
         </div>
+
+        <!-- headers -->
+        <div id="request-headers-section" class="collapsible-section">
+          <h3 class="collapsible-title">
+            <span class="toggle-arrow">▶</span> Headers
+          </h3>
+          <div class="collapsible-content">
+            <table id="request-headers-table" class="table-display">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="empty-row">
+                  <td colspan="2">No headers found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- update -->
+        <div class="button-group">
+          <button id="update-btn" class="primary">Update</button>
+        </div>
+      </div>
+
+      <!-- response -->
+      <div id="response-section" class="response-section">
+        <h2>Response</h2>
+
+        <!-- data -->
+        <div id="response-data-section" class="response-data-section">
+          <h3>Data</h3>
+          <pre id="data-output" class="multi-display"></pre>
+          <button id="download-btn" class="download-button" disabled>
+            Download
+          </button>
+        </div>
+
+        <!-- headers -->
+        <div id="response-headers-section" class="collapsible-section">
+          <h3 class="collapsible-title">
+            <span class="toggle-arrow">▶</span> Headers
+          </h3>
+          <div class="collapsible-content">
+            <table id="response-headers-table" class="table-display">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="empty-row">
+                  <td colspan="2">No headers found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="../script/util/curl-parser.js"></script>
     <script src="../script/popup.js"></script>
-</body>
-
+  </body>
 </html>

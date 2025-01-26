@@ -1,0 +1,16 @@
+/* ==================== 主入口文件 ==================== */
+@import "base/_reset.css";
+@import "base/_typography.css";
+@import "common/_button.css";
+@import "common/_editor.css";
+@import "common/_table.css";
+@import "component/_curl-section.css";
+@import "component/_request-section.css";
+@import "component/_response-section.css";
+@import "util/_animation.css";
+
+/* 主容器 */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}

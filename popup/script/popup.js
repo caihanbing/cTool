@@ -253,4 +253,23 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`更新错误: ${error.message}`);
         }
     });
+
+    // 获取所有可折叠区块
+    const collapsibles = document.querySelectorAll('.collapsible-section');
+
+    collapsibles.forEach(section => {
+        const title = section.querySelector('.collapsible-title');
+
+        title.addEventListener('click', function () {
+            // 切换激活状态
+            section.classList.toggle('active');
+
+            // 更新箭头方向
+            const arrow = this.querySelector('.toggle-arrow');
+            arrow.textContent = section.classList.contains('active')
+                ? '▼'
+                : '▶';
+        });
+    });
+
 });

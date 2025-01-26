@@ -1,0 +1,21 @@
+/* ==================== 动画系统 ==================== */
+.request-section,
+.response-section {
+    display: none;
+}
+
+.request-section.active,
+.response-section.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
