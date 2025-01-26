@@ -1,13 +1,14 @@
-/* ==================== 表格系统 ==================== */
-/* 所有表格基础样式 */
+/* 表格 */
 .table-display {
     width: 100%;
+    /* 消除单元格间隙 */
     border-collapse: collapse;
     margin: 10px 0;
+    /* 固定列宽 */
     table-layout: fixed;
 }
 
-/* 列宽分配（保持原始ID选择器） */
+/* 列宽分配*/
 .table-display th:nth-child(1) {
     width: 30%;
 }
@@ -20,7 +21,9 @@
 .table-display th,
 .table-display td {
     padding: 8px;
+    /* 左对齐 */
     text-align: left;
+    /* 底部边框 */
     border-bottom: 1px solid #eee;
 }
 
@@ -29,39 +32,40 @@
     background: #f8f9fa;
 }
 
-/* 空状态提示（保持原始类选择器） */
+/* 空表格提示 */
 .empty-row td {
     color: #999;
+    /* 居中 */
     text-align: center;
     padding: 15px;
 }
 
-/* 折叠面板样式 */
 .collapsible-section .collapsible-content {
+    /* 默认隐藏内容 */
     max-height: 0;
+    /* 隐藏溢出内容 */
     overflow: hidden;
-    transition: max-height 0.3s ease-out;
 }
 
 .collapsible-section.active .collapsible-content {
+    /* 展开高度 */
     max-height: 1000px;
-    /* 根据实际内容高度调整 */
 }
 
-/* 切换箭头样式 */
+/* 箭头样式 */
 .toggle-arrow {
     margin-left: 8px;
-    font-size: 0.8em;
-    transition: transform 0.3s ease;
+    font-size: 0.7em;
 }
 
-/* 默认隐藏表格 */
 #request-headers-table,
 #response-headers-table {
+    /* 默认隐藏表格 */
     display: none;
 }
 
 .collapsible-section.active #request-headers-table,
 .collapsible-section.active #response-headers-table {
+    /* 展开时显示表格 */
     display: table;
 }

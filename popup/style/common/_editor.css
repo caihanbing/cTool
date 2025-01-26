@@ -1,13 +1,18 @@
-/* ==================== 编辑器通用样式 ==================== */
+/* 编辑器 */
 .multi-editor {
     height: 200px;
+    /* 占满父容器宽度 */
     width: 100%;
-    padding: 8px;
+    /* 文本与边框的边距 */
+    padding: 3px;
+    /* 浅灰色边框 */
     border: 1px solid #ddd;
+    /* 圆角半径 */
     border-radius: 4px;
     font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
+    /* 允许垂直调整 */
     resize: vertical;
     margin: 5px 0;
 }

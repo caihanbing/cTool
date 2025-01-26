@@ -38,6 +38,28 @@
           ></textarea>
         </div>
 
+        <!-- headers -->
+        <div id="request-headers-section" class="collapsible-section">
+          <h3 class="collapsible-title">
+            <span class="toggle-arrow">▶</span> Headers
+          </h3>
+          <div class="collapsible-content">
+            <table id="request-headers-table" class="table-display">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="empty-row">
+                  <td colspan="2">No headers found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- parameters -->
         <div id="request-parameters-section">
           <h3><span class="toggle-arrow">▼</span> Parameters</h3>
@@ -66,28 +88,6 @@
           ></textarea>
         </div>
 
-        <!-- headers -->
-        <div id="request-headers-section" class="collapsible-section">
-          <h3 class="collapsible-title">
-            <span class="toggle-arrow">▶</span> Headers
-          </h3>
-          <div class="collapsible-content">
-            <table id="request-headers-table" class="table-display">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="empty-row">
-                  <td colspan="2">No headers found</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         <!-- update -->
         <div class="button-group">
           <button id="update-btn" class="primary">Update</button>
@@ -97,15 +97,6 @@
       <!-- response -->
       <div id="response-section">
         <h2>Response</h2>
-
-        <!-- data -->
-        <div id="response-data-section">
-          <h3><span class="toggle-arrow">▼</span> Data</h3>
-          <pre id="data-output" class="multi-display"></pre>
-          <div class="button-group">
-            <button id="download-btn" class="primary" disabled>Download</button>
-          </div>
-        </div>
 
         <!-- headers -->
         <div id="response-headers-section" class="collapsible-section">
@@ -126,6 +117,15 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- data -->
+        <div id="response-data-section">
+          <h3><span class="toggle-arrow">▼</span> Data</h3>
+          <pre id="data-output" class="multi-display"></pre>
+          <div class="button-group">
+            <button id="download-btn" class="primary" disabled>Download</button>
           </div>
         </div>
       </div>

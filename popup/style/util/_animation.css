@@ -1,21 +1,27 @@
-/* ==================== 动画系统 ==================== */
-.request-section,
-.response-section {
+/* 动画 */
+#request-section,
+#response-section {
+    /* request/response组件默认不显示 */
     display: none;
 }
 
-.request-section.active,
-.response-section.active {
+#request-section.active,
+#response-section.active {
+    /* 激活后块级元素显示 */
     display: block;
+    /* 淡入动画 */
     animation: fadeIn 0.3s ease;
 }
 
+/* 定义淡入动画 */
 @keyframes fadeIn {
     from {
+        /* 完全透明不可见 */
         opacity: 0;
     }
 
     to {
+        /* 完全不透明可见 */
         opacity: 1;
     }
 }

@@ -1,4 +1,7 @@
-/* ==================== Curl 组件 ==================== */
+/* curl组件 */
 #curl-section {
-    margin-bottom: 32px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 10px 0;
 }

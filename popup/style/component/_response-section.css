@@ -1,20 +1,23 @@
-/* ==================== 响应组件 ==================== */
+/* response组件 */
 #response-section {
     border: 1px solid #ddd;
     border-radius: 6px;
     padding: 15px;
-    margin: 15px 0;
+    margin: 10px 0;
 }
 
 .multi-display {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 4px;
-    margin: 10px 0;
     max-height: 300px;
-    overflow: auto;
-    white-space: pre-wrap;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     font-family: 'Menlo', 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
+    resize: vertical;
+    margin: 5px 0;
+    overflow: auto;
+    white-space: pre-wrap;
+    background-color: white;
 }
