@@ -1,3 +1,5 @@
+import { createRequestDraft, stripFileAttachments } from "../request-model.js";
+
 const RESPONSE_RETENTION_MS = 24 * 60 * 60 * 1000;
 const RESPONSE_LIMIT = 10;
 const HISTORY_LIMIT = 100;
@@ -228,11 +230,10 @@ export function createRepositories(db) {
           return { ...structuredClone(item), id, importedAt: Date.now() };
         });
         /** @param {DbRecord} request */
-        const remapRequest = (request) => ({
-          ...structuredClone(request),
-          id: crypto.randomUUID(),
-          environmentId: environmentIds.get(request.environmentId) ?? request.environmentId ?? null
-        });
+        const remapRequest = (request) => {
+          const safe = stripFileAttachments(createRequestDraft(request));
+          return { ...safe, id: crypto.randomUUID(), environmentId: environmentIds.get(request.environmentId) ?? request.environmentId ?? null };
+        };
         const drafts = (data.drafts ?? []).map(remapRequest);
         /** @type {DbRecord[]} */
         const favorites = (data.favorites ?? []).map((item) => ({ ...structuredClone(item), id: crypto.randomUUID(), request: remapRequest(item.request) }));

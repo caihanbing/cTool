@@ -1,3 +1,5 @@
+import { createRequestDraft, stripFileAttachments } from "../request-model.js";
+
 export const BACKUP_SCHEMA_VERSION = 1;
 const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
 const COLLECTIONS = ["drafts", "history", "favorites", "environments", "globalVariables"];
@@ -33,14 +35,24 @@ export async function buildBackup(repositories, options = {}) {
   ]);
   /** @type {Array<{id?:string,name:string,value:string,secret?:boolean}>} */
   const globalVariables = variables;
+  const cleanRequest = (request) => stripFileAttachments(createRequestDraft(request));
   return {
     product: "cTool",
     schemaVersion: BACKUP_SCHEMA_VERSION,
     exportedAt: new Date((options.now ?? Date.now)()).toISOString(),
-    drafts,
-    history: history.map(({ responseBody, body, ...record }) => record),
-    favorites,
-    environments,
+    drafts: drafts.map(cleanRequest),
+    history: history.map((entry) => {
+      const record = { ...entry };
+      if (record.request) record.request = cleanRequest(record.request);
+      delete record.responseBody;
+      delete record.body;
+      return record;
+    }),
+    favorites: favorites.map((favorite) => ({ ...favorite, request: cleanRequest(favorite.request) })),
+    environments: environments.map((environment) => ({
+      ...environment,
+      variables: (environment.variables ?? []).filter((variable) => options.includeSecrets === true || variable.secret !== true)
+    })),
     globalVariables: globalVariables.filter((variable) => options.includeSecrets === true || variable.secret !== true)
   };
 }

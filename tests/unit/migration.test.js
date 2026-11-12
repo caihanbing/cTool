@@ -41,3 +41,25 @@ test("valid legacy records migrate once and leave existing history intact", asyn
     assert.deepEqual(migrated.request.query.map(({ value }) => value), ["1", ""]);
   } finally { db.close(); }
 });
+
+test("migrates the original parser data shape including parameters, headers, and JSON payload", async () => {
+  const db = await openDatabase("ctool-migrate-original-shape-" + crypto.randomUUID());
+  try {
+    const repositories = createRepositories(db);
+    const source = JSON.stringify([{ time: "2025-01-03 12-00-00", succeed: true, data: {
+      url: "https://legacy.example.test/items",
+      method: "POST",
+      parameters: { page: "2", search: "red blue" },
+      headers: { "Content-Type": "application/json", "X-Legacy": "kept" },
+      payload: { label: "sample" }
+    } }]);
+    const result = await migrateLegacyHistory({ repositories, localStorage: memoryStorage(source) });
+    assert.equal(result.imported, 1);
+    const migrated = (await repositories.listHistory()).find(({ migratedFromLegacy }) => migratedFromLegacy);
+    assert.deepEqual(migrated.request.query.map(({ name, value }) => [name, value]), [["page", "2"], ["search", "red blue"]]);
+    assert.deepEqual(migrated.request.headers.map(({ name, value }) => [name, value]), [["Content-Type", "application/json"], ["X-Legacy", "kept"]]);
+    assert.equal(migrated.request.method, "POST");
+    assert.equal(migrated.request.body.type, "json");
+    assert.equal(migrated.request.body.text, '{"label":"sample"}');
+  } finally { db.close(); }
+});

@@ -66,6 +66,27 @@ test("manual Cookie is isolated to the exact extension request and removed after
   expect(cookie ?? "").toBe("");
 });
 
+test("manual Referer, Origin, and User-Agent are applied only to the extension request", async () => {
+  const page = await openExtensionPage();
+  const headers = [
+    { name: "Referer", value: "https://source.example.test/page", enabled: true },
+    { name: "Origin", value: "https://source.example.test", enabled: true },
+    { name: "User-Agent", value: "cTool-Local-Fixture/2.0", enabled: true }
+  ];
+  const request = await run(page, draft("/capture", { headers }));
+  expect(request.result.status).toBe("completed");
+  const received = JSON.parse(request.result.previewText).headers;
+  expect(received.referer).toBe("https://source.example.test/page");
+  expect(received.origin).toBe("https://source.example.test");
+  expect(received["user-agent"]).toBe("cTool-Local-Fixture/2.0");
+
+  const pageResult = await run(page, draft("/capture"));
+  const pageHeaders = JSON.parse(pageResult.result.previewText).headers;
+  expect(pageHeaders.referer ?? "").not.toBe("https://source.example.test/page");
+  expect(pageHeaders.origin ?? "").not.toBe("https://source.example.test");
+  expect(pageHeaders["user-agent"]).not.toBe("cTool-Local-Fixture/2.0");
+});
+
 test("keeps HTTP error bodies, reports blocked redirects, and follows only when requested", async () => {
   const page = await openExtensionPage();
   const httpError = await run(page, draft("/error"));

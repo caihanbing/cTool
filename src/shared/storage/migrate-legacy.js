@@ -20,7 +20,21 @@ export async function migrateLegacyHistory({ repositories, localStorage, now = D
     try {
       if (typeof entry.curl === "string") request = parseCurlCommand(entry.curl).draft;
       else if (typeof entry.command === "string") request = parseCurlCommand(entry.command).draft;
-      else if (entry.data?.url) request = createRequestDraft({ ...entry.data, headers: Array.isArray(entry.data.headers) ? entry.data.headers : Object.entries(entry.data.headers ?? {}).map(([name, value]) => ({ name, value: String(value), enabled: true })) });
+      else if (entry.data?.url) {
+        const legacy = entry.data;
+        /** @param {unknown} value */
+        const rows = (value) => Array.isArray(value)
+          ? value.map((row) => ({ name: String(row?.name ?? ""), value: String(row?.value ?? ""), enabled: row?.enabled !== false }))
+          : Object.entries(value && typeof value === "object" ? value : {}).map(([name, item]) => ({ name, value: String(item ?? ""), enabled: true }));
+        const payloadPresent = legacy.payload !== undefined && legacy.payload !== null;
+        request = createRequestDraft({
+          url: legacy.url,
+          method: typeof legacy.method === "string" ? legacy.method : "GET",
+          query: rows(legacy.query ?? legacy.parameters),
+          headers: rows(legacy.headers),
+          body: payloadPresent ? { type: "json", text: JSON.stringify(legacy.payload), fields: [] } : { type: "none", text: "", fields: [] }
+        });
+      }
       else continue;
     } catch { continue; }
     const parsedTime = Date.parse(String(entry.time ?? entry.createdAt ?? ""));

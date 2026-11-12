@@ -7,9 +7,10 @@ export const DEFAULT_SETTINGS = Object.freeze({
   selectedEnvironmentId: ""
 });
 
-/** @typedef {typeof DEFAULT_SETTINGS} Settings */
+/** @typedef {{locale:'zh-CN'|'en',theme:'light'|'dark'|'system',privacyMode:boolean,followRedirects:boolean,timeoutMs:number,selectedEnvironmentId:string}} Settings */
 
 /** @param {chrome.storage.StorageArea} [storage] */
+/** @returns {Promise<Settings>} */
 export async function loadSettings(storage = chrome.storage.local) {
   /** @type {Record<string, any>} */
   const values = await storage.get(DEFAULT_SETTINGS);
@@ -24,17 +25,18 @@ export async function loadSettings(storage = chrome.storage.local) {
 }
 
 /** @param {Partial<Settings>} changes @param {chrome.storage.StorageArea} [storage] */
+/** @returns {Promise<Settings>} */
 export async function updateSettings(changes, storage = chrome.storage.local) {
   const current = await loadSettings(storage);
   const merged = { ...current, ...changes };
-  const normalized = {
+  const normalized = /** @type {Settings} */ ({
     locale: merged.locale === "en" ? "en" : "zh-CN",
     theme: ["light", "dark", "system"].includes(merged.theme) ? merged.theme : "system",
     privacyMode: merged.privacyMode === true,
     followRedirects: merged.followRedirects === true,
     timeoutMs: Number.isFinite(merged.timeoutMs) ? Math.max(1, Math.min(300_000, merged.timeoutMs)) : DEFAULT_SETTINGS.timeoutMs,
     selectedEnvironmentId: String(merged.selectedEnvironmentId ?? "")
-  };
+  });
   await storage.set(normalized);
   return normalized;
 }

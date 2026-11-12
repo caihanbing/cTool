@@ -28,3 +28,16 @@ test("returns distinct missing variables across all request fields", () => {
   const result = resolveEnvironment(draft, [], null);
   assert.deepEqual(result.missing.sort(), ["bodyValue", "host", "token"]);
 });
+
+test("ignores missing variables in disabled or inactive request fields", () => {
+  const draft = createRequestDraft({
+    url: "https://api.example.test",
+    query: [{ name: "unused", value: "{{queryValue}}", enabled: false }],
+    headers: [{ name: "X-Disabled", value: "{{headerValue}}", enabled: false }],
+    body: { type: "multipart", text: "{{inactiveText}}", fields: [{ name: "upload", value: "{{fieldValue}}", enabled: false }] }
+  });
+  const result = resolveEnvironment(draft, [], null);
+  assert.deepEqual(result.missing, []);
+  assert.equal(result.draft.headers[0].value, "{{headerValue}}");
+  assert.equal(result.draft.body.fields[0].value, "{{fieldValue}}");
+});

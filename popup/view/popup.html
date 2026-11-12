@@ -1,140 +1,187 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="../style/main.css" />
-  </head>
-
-  <body>
-    <div class="container">
-      <h1>cTool</h1>
-
-      <!-- curl -->
-      <div id="curl-section">
-        <div class="title-row">
-          <h2>Curl</h2>
-          <button id="history-btn" class="primary">History</button>
-        </div>
-        <textarea
-          id="curl-input"
-          class="multi-editor"
-          spellcheck="false"
-        ></textarea>
-        <div class="button-group">
-          <button id="send-btn" class="primary">Send</button>
-          <button id="parse-btn">Parse</button>
-          <button id="clear-btn">Clear</button>
-        </div>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cTool · cURL 工作台</title>
+  <link rel="stylesheet" href="../style/app.css">
+</head>
+<body>
+  <div class="app-shell" id="app-shell" data-surface="popup">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">c</span>
+        <div><h1>cTool</h1><span class="version-tag">2.0</span></div>
       </div>
-
-      <!-- request -->
-      <div id="request-section">
-        <h2>Request <span id="request-method"></span></h2>
-
-        <!-- url -->
-        <div id="request-url-section">
-          <h3><span class="toggle-arrow">▼</span> Url</h3>
-          <textarea
-            id="request-url-editor"
-            class="double-editor"
-            spellcheck="false"
-          ></textarea>
-        </div>
-
-        <!-- headers -->
-        <div id="request-headers-section" class="collapsible-section">
-          <h3 class="collapsible-title">
-            <span class="toggle-arrow">▶</span> Headers
-          </h3>
-          <div class="collapsible-content">
-            <table id="request-headers-table" class="table-display">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="empty-row">
-                  <td colspan="2">No headers found</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- parameters -->
-        <div id="request-parameters-section">
-          <h3><span class="toggle-arrow">▼</span> Parameters</h3>
-          <table id="request-parameters-table" class="table-display">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="empty-row">
-                <td colspan="2">No parameters found</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- payload -->
-        <div id="request-payload-section">
-          <h3><span class="toggle-arrow">▼</span> Payload</h3>
-          <textarea
-            id="request-payload-editor"
-            class="multi-editor"
-            spellcheck="false"
-          ></textarea>
-        </div>
-
-        <!-- update -->
-        <div class="button-group">
-          <button id="update-btn" class="primary">Update</button>
-        </div>
+      <div class="topbar-actions">
+        <span id="privacy-indicator" class="privacy-indicator" hidden data-i18n="privacy.on">隐私模式</span>
+        <button id="locale-toggle" class="icon-button locale-button" type="button" aria-label="切换语言" title="切换语言">EN</button>
+        <button id="expand-workbench" class="icon-button" type="button" aria-label="打开独立工作台" title="打开独立工作台">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 3h6v6M17 3l-8 8M15 11v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
+        </button>
       </div>
+    </header>
 
-      <!-- response -->
-      <div id="response-section">
-        <h2>Response</h2>
-
-        <!-- headers -->
-        <div id="response-headers-section" class="collapsible-section">
-          <h3 class="collapsible-title">
-            <span class="toggle-arrow">▶</span> Headers
-          </h3>
-          <div class="collapsible-content">
-            <table id="response-headers-table" class="table-display">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="empty-row">
-                  <td colspan="2">No headers found</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- data -->
-        <div id="response-data-section">
-          <h3><span class="toggle-arrow">▼</span> Data</h3>
-          <pre id="data-output" class="multi-display"></pre>
-          <div class="button-group">
-            <button id="download-btn" class="primary" disabled>Download</button>
-          </div>
-        </div>
-      </div>
+    <div id="app-message" class="notice" role="status" aria-live="polite" hidden></div>
+    <div id="active-task-banner" class="active-task-banner" role="status" hidden>
+      <span class="spinner" aria-hidden="true"></span><span id="active-task-text" data-i18n="task.active">正在执行请求…</span>
+      <button id="cancel-active-task" class="text-button danger-text" type="button" data-i18n="action.cancel">取消</button>
     </div>
 
-    <script src="../script/util/curl-parser.js"></script>
-    <script src="../script/popup.js"></script>
-  </body>
+    <nav class="primary-nav" role="tablist" aria-label="cTool 工作区">
+      <button class="nav-tab is-active" id="tab-request" role="tab" aria-selected="true" aria-controls="panel-request" data-panel-target="request" data-i18n="nav.request">请求</button>
+      <button class="nav-tab" id="tab-response" role="tab" aria-selected="false" aria-controls="panel-response" data-panel-target="response" data-i18n="nav.response">响应</button>
+      <button class="nav-tab" id="tab-history" role="tab" aria-selected="false" aria-controls="panel-history" data-panel-target="history" data-i18n="nav.history">历史</button>
+      <button class="nav-tab" id="tab-favorites" role="tab" aria-selected="false" aria-controls="panel-favorites" data-panel-target="favorites" data-i18n="nav.favorites">收藏</button>
+      <button class="nav-tab" id="tab-environments" role="tab" aria-selected="false" aria-controls="panel-environments" data-panel-target="environments" data-i18n="nav.environments">环境</button>
+      <button class="nav-tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="panel-settings" data-panel-target="settings" data-i18n="nav.settings">设置</button>
+    </nav>
+
+    <main class="view-stack">
+      <section id="panel-request" class="view-panel is-active" role="tabpanel" aria-labelledby="tab-request" data-panel="request">
+        <div class="section-heading">
+          <div><p class="eyebrow" data-i18n="request.eyebrow">HTTP CLIENT</p><h2 data-i18n="request.title">构建请求</h2></div>
+          <div class="heading-actions"><button id="open-drafts-btn" class="text-button" type="button" data-i18n="action.openDrafts">已保存草稿</button><button id="save-favorite-btn" class="quiet-button" type="button" data-i18n="action.saveFavorite">保存收藏</button></div>
+        </div>
+
+        <details class="curl-import" open>
+          <summary data-i18n="curl.importTitle">导入 cURL</summary>
+          <textarea id="curl-input" class="curl-input" rows="3" spellcheck="false" aria-label="cURL 命令" data-i18n-placeholder="curl.placeholder" placeholder="粘贴 Chrome / Edge 开发者工具复制的 cURL 命令"></textarea>
+          <div class="curl-actions">
+            <button id="parse-btn" class="secondary-button" type="button" data-i18n="action.import">解析并导入</button>
+            <button id="generate-curl-btn" class="text-button" type="button" data-i18n="action.generateCurl">生成 cURL</button>
+            <button id="copy-curl-btn" class="text-button" type="button" data-i18n="action.copy">复制</button>
+            <button id="download-curl-btn" class="text-button" type="button" data-i18n="action.downloadCurl">下载</button>
+          </div>
+          <div id="curl-warnings" class="inline-note" hidden></div>
+        </details>
+
+        <form id="request-form" autocomplete="off">
+          <div class="url-row">
+            <label class="sr-only" for="request-method" data-i18n="request.method">请求方法</label>
+            <select id="request-method" class="method-select" aria-label="请求方法">
+              <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option>
+            </select>
+            <label class="sr-only" for="request-url" data-i18n="request.url">请求 URL</label>
+            <input id="request-url" class="url-input" type="url" spellcheck="false" placeholder="https://api.example.com/v1/items" data-i18n-placeholder="request.urlPlaceholder" required>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="environment-select" data-i18n="environment.select">环境</label>
+              <select id="environment-select"><option value="" data-i18n="environment.none">无环境</option></select>
+            </div>
+            <div class="form-field">
+              <label for="request-timeout" data-i18n="request.timeout">超时（秒）</label>
+              <input id="request-timeout" type="number" min="1" max="300" step="1" value="25">
+            </div>
+          </div>
+
+          <div class="editor-section">
+            <div class="editor-title"><h3 data-i18n="request.query">查询参数</h3><button class="add-row-button" type="button" data-add-row="query" aria-label="添加查询参数">＋</button></div>
+            <div id="query-rows" class="editable-rows" aria-label="查询参数"></div>
+          </div>
+          <div class="editor-section">
+            <div class="editor-title"><h3 data-i18n="request.headers">请求头</h3><button class="add-row-button" type="button" data-add-row="headers" aria-label="添加请求头">＋</button></div>
+            <div id="header-rows" class="editable-rows" aria-label="请求头"></div>
+          </div>
+
+          <div class="form-grid auth-grid">
+            <div class="form-field">
+              <label for="auth-type" data-i18n="auth.type">认证方式</label>
+              <select id="auth-type"><option value="none" data-i18n="auth.none">无</option><option value="basic">Basic</option><option value="bearer">Bearer</option></select>
+            </div>
+            <div id="auth-fields" class="auth-fields"></div>
+          </div>
+
+          <div class="editor-section body-section">
+            <div class="editor-title"><h3 data-i18n="request.body">请求正文</h3><button id="add-body-field" class="add-row-button" type="button" aria-label="添加正文项" hidden>＋</button>
+              <select id="body-type" aria-label="请求正文类型">
+                <option value="none" data-i18n="body.none">无</option><option value="json">JSON</option><option value="text" data-i18n="body.text">原始文本</option><option value="urlencoded">x-www-form-urlencoded</option><option value="multipart">multipart/form-data</option>
+              </select>
+            </div>
+            <textarea id="body-editor" class="body-editor" rows="5" spellcheck="false" data-i18n-placeholder="body.placeholder" placeholder="输入 JSON 或正文文本"></textarea>
+            <div id="body-fields" class="body-fields" hidden></div>
+          </div>
+
+          <details class="advanced-options">
+            <summary data-i18n="request.advanced">高级选项</summary>
+            <label class="check-row"><input id="follow-redirects" type="checkbox"><span data-i18n="request.followRedirects">跟随重定向</span></label>
+            <p class="muted-copy" data-i18n="request.redirectNote">默认不跟随。关闭时浏览器会阻止跳转，并显示提示。</p>
+          </details>
+
+          <div class="request-footer">
+            <button id="send-btn" class="primary-button" type="button"><span class="send-icon" aria-hidden="true">↗</span><span data-i18n="action.send">发送请求</span></button>
+            <span class="shortcut-hint"><kbd>Ctrl</kbd> <span>+</span> <kbd>Enter</kbd></span>
+          </div>
+        </form>
+      </section>
+
+      <section id="panel-response" class="view-panel" role="tabpanel" aria-labelledby="tab-response" data-panel="response" hidden>
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="response.eyebrow">RESULT</p><h2 data-i18n="response.title">响应</h2></div><button id="download-response-btn" class="secondary-button" type="button" disabled data-i18n="action.download">下载原始正文</button></div>
+        <div id="response-empty" class="empty-state"><span class="empty-mark" aria-hidden="true">↙</span><h3 data-i18n="response.emptyTitle">还没有响应</h3><p data-i18n="response.emptyCopy">发送请求后，状态、耗时、响应头和正文会显示在这里。</p></div>
+        <div id="response-content" hidden>
+          <div class="response-summary"><span id="response-status" class="status-pill">—</span><span id="response-time">—</span><span id="response-size">—</span></div>
+          <div class="response-final-url"><span data-i18n="response.finalUrl">最终 URL</span><code id="response-final-url"></code></div>
+          <div id="response-error" class="response-error" hidden></div>
+          <div id="response-warning" class="inline-note" hidden></div>
+          <div class="response-toolbar">
+            <div class="segmented-control" role="group" aria-label="响应显示模式"><button id="response-mode-preview" class="is-active" type="button" data-i18n="response.preview">预览</button><button id="response-mode-headers" type="button" data-i18n="response.headers">响应头</button></div>
+            <div class="response-actions"><button id="format-response-btn" class="text-button" type="button" data-i18n="action.format">格式化</button><button id="copy-response-btn" class="text-button" type="button" data-i18n="action.copy">复制</button></div>
+          </div>
+          <div id="response-preview-pane" class="response-pane"><div class="response-find"><input id="response-search" type="search" data-i18n-placeholder="response.searchPlaceholder" placeholder="在正文中查找"><button id="response-find-next" class="text-button" type="button" data-i18n="action.findNext">下一个</button></div><p id="response-binary" class="inline-note" hidden data-i18n="response.binary">这是二进制响应，可下载原始正文。</p><p id="response-no-body" class="inline-note" hidden data-i18n="response.noBody">响应没有正文。</p><pre id="data-output" class="response-body" tabindex="0"></pre><p id="response-truncated" class="inline-note" hidden data-i18n="response.truncated">预览已截断；下载可获取完整正文。</p></div>
+          <div id="response-headers-pane" class="response-pane" hidden><div id="response-header-list" class="header-list"></div></div>
+        </div>
+      </section>
+
+      <section id="panel-history" class="view-panel" role="tabpanel" aria-labelledby="tab-history" data-panel="history" hidden>
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="history.eyebrow">LOCAL ACTIVITY</p><h2 data-i18n="history.title">请求历史</h2></div><button id="clear-history-btn" class="text-button danger-text" type="button" data-i18n="action.clear">清空</button></div>
+        <input id="history-search" class="search-input" type="search" data-i18n-placeholder="history.searchPlaceholder" placeholder="搜索 URL 或状态">
+        <div id="history-list" class="record-list"></div>
+      </section>
+
+      <section id="panel-favorites" class="view-panel" role="tabpanel" aria-labelledby="tab-favorites" data-panel="favorites" hidden>
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="favorites.eyebrow">SAVED REQUESTS</p><h2 data-i18n="favorites.title">收藏</h2></div></div>
+        <div id="favorite-list" class="record-list"></div>
+      </section>
+
+      <section id="panel-environments" class="view-panel" role="tabpanel" aria-labelledby="tab-environments" data-panel="environments" hidden>
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="environment.eyebrow">VARIABLES</p><h2 data-i18n="environment.title">环境变量</h2></div><button id="add-environment-btn" class="secondary-button" type="button" data-i18n="action.addEnvironment">新建环境</button></div>
+        <div class="environment-card">
+          <div class="editor-title"><h3 data-i18n="environment.global">全局变量</h3><button id="add-global-variable" class="add-row-button" type="button" aria-label="添加全局变量">＋</button></div>
+          <div id="global-variable-rows" class="editable-rows"></div>
+        </div>
+        <div id="environment-list" class="environment-list"></div>
+        <p class="muted-copy" data-i18n="environment.syntax">使用 {{name}} 引用变量；当前环境会覆盖同名全局变量。</p>
+      </section>
+
+      <section id="panel-settings" class="view-panel" role="tabpanel" aria-labelledby="tab-settings" data-panel="settings" hidden>
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="settings.eyebrow">ON THIS DEVICE</p><h2 data-i18n="settings.title">设置与数据</h2></div></div>
+        <div class="settings-card">
+          <div class="settings-row"><div><h3 data-i18n="settings.theme">主题</h3><p data-i18n="settings.themeCopy">浅色、深色或跟随系统</p></div><select id="theme-setting"><option value="system" data-i18n="theme.system">跟随系统</option><option value="light" data-i18n="theme.light">浅色</option><option value="dark" data-i18n="theme.dark">深色</option></select></div>
+          <div class="settings-row"><div><h3 data-i18n="settings.privacy">隐私模式</h3><p data-i18n="settings.privacyCopy">不自动保存新的草稿、历史和响应</p></div><label class="switch"><input id="privacy-setting" type="checkbox"><span></span></label></div>
+        </div>
+        <div class="settings-card backup-card">
+          <div><h3 data-i18n="backup.title">备份与恢复</h3><p data-i18n="backup.warning">备份可能包含 URL、请求头、正文和凭据；文件请妥善保管。</p></div>
+          <div class="backup-actions"><button id="export-backup-btn" class="secondary-button" type="button" data-i18n="backup.export">导出备份</button><label class="secondary-button file-button"><span data-i18n="backup.choose">选择备份文件</span><input id="import-backup-file" type="file" accept="application/json,.json"></label></div>
+          <div id="import-preview" class="import-preview" hidden><p id="import-preview-summary"></p><button id="confirm-import-btn" class="primary-button small-button" type="button" disabled data-i18n="backup.merge">确认合并导入</button></div>
+        </div>
+        <p class="muted-copy" data-i18n="settings.localCopy">数据仅保存在此浏览器配置文件中，不会上传或同步。</p>
+      </section>
+    </main>
+
+    <dialog id="favorite-dialog" class="app-dialog">
+      <form method="dialog" id="favorite-form"><h2 data-i18n="favorites.saveTitle">保存为收藏</h2><label for="favorite-name" data-i18n="favorites.name">名称</label><input id="favorite-name" required maxlength="80"><div class="dialog-actions"><button class="secondary-button" value="cancel" data-i18n="action.cancel">取消</button><button id="confirm-favorite-btn" class="primary-button" value="save" data-i18n="action.save">保存</button></div></form>
+    </dialog>
+
+    <dialog id="draft-dialog" class="app-dialog">
+      <form method="dialog"><h2 data-i18n="drafts.title">已保存草稿</h2><div id="draft-list" class="record-list"></div><div class="dialog-actions"><button class="secondary-button" value="close" data-i18n="action.cancel">关闭</button></div></form>
+    </dialog>
+
+    <dialog id="export-dialog" class="app-dialog">
+      <form method="dialog" id="export-form"><h2 data-i18n="backup.confirmTitle">导出本地备份</h2><p data-i18n="backup.confirmCopy">备份会包含已保存请求与历史，其中可能有凭据。请确认保存位置可信。</p><label class="check-row"><input id="include-secret-variables" type="checkbox"><span data-i18n="backup.includeSecrets">同时导出标记为秘密的变量</span></label><div class="dialog-actions"><button class="secondary-button" value="cancel" data-i18n="action.cancel">取消</button><button id="confirm-export-btn" class="primary-button" value="export" data-i18n="backup.export">导出备份</button></div></form>
+    </dialog>
+  </div>
+  <script type="module" src="../script/popup-entry.js"></script>
+</body>
 </html>

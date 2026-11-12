@@ -1,0 +1,27 @@
+name: Extension checks
+
+on:
+  push:
+    branches: [main, "codex/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ctool-2.0.0
+          path: dist/ctool-2.0.0.zip
+          if-no-files-found: error
+          retention-days: 90
