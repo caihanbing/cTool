@@ -2,172 +2,191 @@
 
 <!-- feature-id: curl-history -->
 <!-- feature-title: 请求历史 -->
-<!-- feature-aliases: cURL 历史, 请求记录 -->
+<!-- feature-aliases: cURL 历史, 请求记录, 请求历史恢复 -->
 <!-- feature-status: active -->
-<!-- feature-summary: 将最近十条成功解析为 JSON 的请求写入扩展 localStorage，并在独立窗口展示。 -->
-<!-- last-verified: 2026-11-04 -->
-<!-- code-basis: HEAD 562904fe8954; worktree-digest sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 -->
+<!-- feature-summary: 在本机保留最近 100 项请求终态，支持搜索、恢复、删除和旧历史迁移。 -->
+<!-- last-verified: 2026-11-12 -->
+<!-- code-basis: HEAD 5dbac97825c2; worktree-digest sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 -->
 
 ## 快速上下文
 
-请求历史由主弹窗 `popup/script/popup.js` 在 HTTP 成功且响应 JSON 解析成功后写入扩展来源的 `localStorage`，键名为 `curlHistory`，最多保留十条。`popup/view/history.html` 和 `popup/script/history.js` 在单独窗口中读取并展示时间、URL、结果和操作按钮。
+请求历史属于 cTool 2.0 的本机数据层。每个请求终态将脱敏后的请求快照与状态写入 IndexedDB，界面在 Popup 和全页工作台中提供搜索、恢复编辑、删除和清空。历史默认上限为最近 100 项；它不保存响应预览，响应原文位于独立且受限的 response store。
 
-历史列表可以显示已保存字段，但 `Apply` 当前不能恢复命令：写入记录使用 `curl` 属性，历史页读取的是 `entry.command`；此外主弹窗没有接收 `APPLY_COMMAND` 消息的处理器。历史页还引用了仓库中不存在的 `popup/style/history.css`。
+首次打开新版扩展时，`migrateLegacyHistory` 尝试从旧 `localStorage.curlHistory` 转换已有历史。新旧存储属于不同安装版本的扩展数据；原地升级和同 profile 加载是迁移前提。
 
 ## 目标与边界
 
 ### 目标
 
-- 保存近期成功请求的命令和解析结果，供用户查看历史。
-- 提供从历史窗口将命令回传主弹窗的恢复入口。
+- 保留成功、HTTP 错误、网络错误、取消、超时和中断结果，便于本机回看和复用。
+- 控制历史与响应的容量，允许通过隐私模式阻止新数据持久化。
+- 在升级时迁移可识别的旧 `curlHistory` 请求模型。
 
 ### 范围内
 
-- 在成功请求后维护 `curlHistory`，记录时间、原始 cURL、解析数据和成功标记。
-- 将记录数限制为十条，最新记录插入数组开头。
-- 单独打开历史页并读取同一扩展来源的 `localStorage` 数据。
-- 呈现时间、URL、结果字段和 `Apply` 控件。
+- 最近 100 条历史；按 URL、名称、终态和错误码搜索。
+- 恢复请求到编辑器、单条删除、清空全部。
+- 事务内写终态，更新失败时显示存储提示。
+- 从旧 `curl`/`command` 文本或旧 `data.url`、参数、头、JSON payload 记录迁移。
+- 响应对象与历史分开存储，最多 10 份且保留 24 小时。
 
 ### 范围外
 
-- 服务端同步、跨设备同步、无限期归档、搜索、删除或编辑历史记录。
-- 存储 HTTP 响应正文；记录中仅保存请求命令和解析数据。
-- 当前不可用的命令恢复流程；代码只保留了尚未接通的按钮和消息片段。
+- 远端账户、云同步、多设备合并或服务端审计。
+- 保证旧版已卸载、profile 已删除或浏览器已清理时仍可恢复旧数据。
+- 将过去的原始响应正文、下载内容或文件字节加入历史导出。
 
 ### 不变量
 
-- 存储键为 `curlHistory`；主弹窗成功路径最多保存十条记录。
-- 记录的原始请求字段名为 `curl`，解析对象字段名为 `data`。
-- 历史保存在扩展页面来源的 `localStorage`，不是远端数据库或 `chrome.storage`。
+- 单条历史记录以任务 ID 为键；`createdAt` 决定最近记录顺序。
+- `stripFileAttachments` 删除本地文件路径和已选文件字节后才持久化请求。
+- 历史记录只保存终态元数据，不嵌入 `previewText`、错误正文或响应体。
+- 隐私模式下不写新请求历史或响应；已存在历史不会因打开隐私模式被自动删除。
+- 旧数据只有 IndexedDB 导入事务完成后才记录 `legacyCurlHistoryV1` 标记；损坏数据不写标记。
 
 ## 业务行为
 
-- 主弹窗仅在请求被判定为成功且 `response.json()` 成功后保存一条历史。
-- 每条记录包含固定 UTC+8 格式的时间、原始 cURL 文本、解析对象和 `succeed: true`；失败请求不写入历史。
-- 历史窗口按数组顺序显示时间、`data.url` 和 `succeed`。界面中的结果列显示布尔值。
-- `Apply` 控件当前不能把已存 cURL 恢复到主弹窗，见“已知问题与后续工作”。
+- 请求完成、HTTP 4xx/5xx、失败、取消和超时共用 `runRequest` 的终态路径；HTTP 状态码本身不被误判为网络失败。
+- Popup 关闭不会主动丢弃后台任务；重新打开页面后通过历史或活动任务状态看到结果。
+- 历史行可恢复请求；multipart 的本地路径和 bytes 已清除，恢复后重新选择文件。
+- 搜索不区分大小写，覆盖请求 URL、名称、结果状态与错误码。
+- 隐私模式只影响新自动持久化的草稿、历史与响应；用户明确保存的收藏仍保留。
 
 ## 架构与代码地图
 
-- `manifest.json` — 配置扩展弹窗入口及 `storage` 权限；当前历史实现使用 Web Storage API。
-- `popup/view/popup.html` — `history-btn` 打开历史页面。
-- `popup/script/popup.js` — 从 `localStorage` 读取、更新 `curlHistory`，每次成功请求后截断至十条；通过 `window.open` 打开历史窗口。
-- `popup/view/history.html` — 历史表格结构；引用缺失的 `popup/style/history.css`。
-- `popup/script/history.js` — 读取历史记录并渲染行；尝试向 opener 发送恢复消息。
-- `background/background.js` — 当前为空，不参与历史读写或消息转发。
+- `src/shared/storage/database.js` — IndexedDB `ctool-local-v2` 的 `history`、`responses`、`meta` store。
+- `src/shared/storage/repositories.js` — `addHistory`、`listHistory`、删除/清空、`completeTask`、`saveResponse` 与有界保留。
+- `src/shared/storage/migrate-legacy.js` — `migrateLegacyHistory` 的旧记录解析与一次性迁移。
+- `src/shared/request-executor.js` — 终态 `historyRecord`、响应 body 分离、隐私模式分支。
+- `src/background/task-manager.js` — Worker 恢复时把过期活动任务写为 `interrupted`。
+- `src/ui/app-controller.js` — `renderHistory`、行恢复、单项删除、搜索及清空交互。
+- `tests/unit/storage.test.js`、`tests/unit/migration.test.js`、`tests/unit/task-manager.test.js` — 历史事务、上限、迁移和恢复测试。
+- `tests/extension/request-compat.spec.js`、`tests/extension/ui-workflows.spec.js` — Popup 关闭后恢复和历史 UI 流程。
 
 ## API、事件与任务
 
-### `localStorage` 键 `curlHistory`
+### `repositories.listHistory({ search, limit })`
 
-- 写入者：`popup/script/popup.js`。
-- 读取者：主弹窗初始化逻辑和 `popup/script/history.js`。
-- 值：JSON 序列化的记录数组，最多十条。
-- 错误处理：`JSON.parse(localStorage.getItem(...))` 没有异常恢复；损坏数据会中断相关脚本的初始化。
-- 兼容性：没有版本字段或迁移逻辑；字段名 `curl` 与历史页读取的 `command` 不一致。
+- 输入：可选搜索字符串和返回上限。
+- 输出：按 `createdAt` 降序排序的记录列表；匹配名称、URL、状态和错误码。
+- 错误：IndexedDB 事务失败时 Promise reject，由调用视图处理并提示。
+- 消费者：历史视图与备份导出；删除使用 `deleteHistory(id)`，清空使用 `clearHistory()`。
 
-### 历史窗口与 `APPLY_COMMAND`
+### `repositories.completeTask({ taskId, historyRecord, responseRecord, now })`
 
-- 主弹窗调用 `window.open('history.html', 'historyWindow', ...)` 打开子窗口。
-- 历史页按钮尝试通过 `window.opener.postMessage({ type: 'APPLY_COMMAND', command }, '*')` 回传命令。
-- 主弹窗没有 `message` 事件监听器；当前没有消息消费者，也没有有效的恢复操作。
+- 输入：当前活动任务 ID、可选终态记录和独立响应 body。
+- 输出：若任务锁仍由 `taskId` 所有返回 `true` 并一次性写入/删除；锁不匹配返回 `false`。
+- 事务：共同更新 `meta`、`history`、`responses`；写入失败整体回滚。
+- 消费者：`runRequest`；包含有界记录数的并发单测。
+
+### `migrateLegacyHistory({ repositories, localStorage, now })`
+
+- 输入：浏览器 `localStorage` 中可读的旧 `curlHistory` JSON 数组。
+- 输出：`empty`、`migrated`、`corrupt` 或 `already-migrated` 及导入数量。
+- 兼容：从旧 `curl` 或 `command` 字符串解析命令；旧 `data` 字段保留 URL、参数/查询、头和 JSON payload；旧响应不迁移。
+- 错误：JSON 损坏或根值非数组返回 `corrupt`，不标记完成；单条无效记录略过，其余有效记录仍可迁移。
 
 ## 数据模型与迁移
 
-每条记录由主弹窗构造，形状如下：
-
-- `time`：固定 UTC+8 偏移后格式化为 `YYYY-MM-DD HH-MM-SS`。
-- `curl`：本次成功请求的原始命令字符串。
-- `data`：解析对象，包含 `url`、`method`、`headers`、`parameters` 和 `payload`。
-- `succeed`：成功路径写入的布尔值 `true`。
-
-数组使用 `unshift` 添加新条目，再截取前十条。没有数据库、Schema 版本、迁移、清理 API 或同步机制。
+- 历史：`{ id: taskId, requestId, createdAt, request, result, errorCode?, migratedFromLegacy? }`。请求通过 `stripFileAttachments` 移除文件路径和 bytes；结果持久化时剔除预览和错误消息。
+- 响应：`responses` store 独立存 `{ id, receivedAt, bytes, contentType, isBinary }`；最近 10 项且 24 小时后过期。
+- IndexedDB 的历史和响应由 `completeTask` 原子提交；上限清理在同一事务内进行。
+- 旧 key 为扩展 localStorage `curlHistory`。旧版记录成功写入 `history` 并设置 meta 标志后才算迁移完成；对损坏 JSON 不做覆盖或清除。
+- 新版备份导出历史及 request 定义，但不导出响应正文；导入为合并并生成新 ID，文件附件仍需重新选择。
 
 ## 核心流程
 
-1. 主弹窗启动时从 `localStorage` 读取 `curlHistory`。
-2. 请求工作台确认 HTTP 状态成功并解析 JSON 响应。
-3. 工作台构造历史对象，将新对象插入数组开头，超过十条时截断并写回 `localStorage`。
-4. 用户点击 `History` 后，主弹窗打开 `history.html` 窗口。
-5. 历史页读取数组并渲染记录。点击 `Apply` 会尝试读取 `entry.command` 并发送 `APPLY_COMMAND`，但字段和消费端均未接通。
+1. MV3 Worker 初始化打开 IndexedDB，清理遗留 DNR 规则并检查 `meta.activeTask`。
+2. App 启动执行旧历史迁移；有效记录解析成规范 `RequestDraft` 并在事务里导入。
+3. 请求通过唯一任务锁开始，执行后构造终态历史与独立响应记录。
+4. 非隐私模式在同一 IndexedDB 事务完成记录写入、最近 100 条/10 份响应修剪和任务锁删除。
+5. 历史 UI 读取、搜索或恢复请求；隐私模式对新请求跳过自动记录，但不删除旧数据。
 
 ## 异常与边界条件
 
-- 没有历史键 — 读取逻辑使用空数组作为初始值。
-- 存储 JSON 损坏 — 未捕获的 `JSON.parse` 异常会中断初始化。
-- 失败的 HTTP 请求、非 JSON 响应 — 不创建记录。
-- 超过十条 — 写入时保留数组最前面的十条，最旧记录被丢弃。
-- 缺失字段 — 模板插值会把缺失值渲染为字符串；`entry.command` 当前未由写入方提供。
+- `curlHistory` JSON 损坏或根节点不是数组 — 不写迁移完成标志；保留原值并允许之后重试。
+- 部分旧记录字段缺失或命令语法无效 — 跳过无效项，继续导入其余可解析记录。
+- IndexedDB 事务或配额失败 — 数据库回滚；请求仍可能已到达服务器，UI 提示结果未能本机保存。
+- 迁移后立即重复启动 — `legacyCurlHistoryV1` 防止再次导入同一批记录。
+- 隐私模式期间请求失败或超时 — 不自动保留历史/响应；当前任务仍有运行时状态用于完成/取消。
+- 响应超过 20 MiB — 作为失败终态保存错误元数据（隐私模式除外），不保存响应 bytes。
 
 ## 并发与幂等
 
-- 没有锁、事务、去重或请求幂等键。重复发送同一请求会形成多条历史记录。
-- 主弹窗只在初始化时加载内存数组；并发写入没有合并策略，后写入可能覆盖较早加载的状态。
-- 历史窗口只读，不会主动订阅主弹窗后续写入。
+- `completeTask` 检查 `meta.activeTask.taskId`，只有锁所有者能原子写历史并释放锁。
+- IndexedDB readwrite 事务序列化对历史上限的更新；并发测试确认最近项不会因并发写入被错误裁剪。
+- 迁移标志和批量记录处于同一事务，因此不会产生“标记已迁移但未写入历史”的中间态。
+- 导入备份与旧版迁移由新 ID 防重复；一般历史写入以 task ID 覆盖同 ID 记录，不会重复累加。
 
 ## 安全与权限
 
-- 原始 cURL、请求头和载荷保存在扩展来源的 `localStorage`；如果请求命令含访问令牌或其他敏感值，这些值会随历史保留，直到被新记录挤出或用户清除扩展数据。
-- `history.js` 将时间、URL 和结果直接插入 `innerHTML`；URL 可来自用户输入，存在 DOM 注入风险。
-- “Apply”消息当前使用目标源 `'*'`；目前主弹窗没有消息监听器。
-- `manifest.json` 声明 `storage` 权限，但当前代码调用的是 `localStorage`，没有调用 `chrome.storage`。
+- 记录只存浏览器本机，不云同步；请求历史可能包含 URL 和凭据，因此仍属于敏感本机数据。
+- 不读取浏览器 Cookie 库；手动 Cookie 仅用于当次网络发送，不作为浏览器持久 Cookie。
+- 文件 bytes 与本地路径不进入历史、备份或草稿持久化；迁移不执行历史命令。
+- Service Worker 消息仅接受本扩展页面；错误、日志不写请求正文。
+- 清空历史由用户在 UI 明确确认后执行；插件卸载/站点数据清理由浏览器管理。
 
 ## 配置与依赖
 
-- 存储依赖：浏览器 Web Storage API `localStorage`；没有外部存储服务。
-- 页面依赖：扩展自身的 `popup/view/history.html` 与 `popup/script/history.js`。
-- `history.html` 引用 `../style/history.css`，该文件不存在；清单中的 `storage` 权限未被历史代码使用。
-- 不需要数据库或数据迁移；仓库未提供项目级构建和测试配置。
+- `HISTORY_LIMIT = 100`、`RESPONSE_LIMIT = 10`、`RESPONSE_RETENTION_MS = 24h` 定义在 `src/shared/storage/repositories.js`。
+- `privacyMode` 存在 `chrome.storage.local`；环境/收藏与隐私设置分离。
+- 依赖 IndexedDB、`structuredClone`、`localStorage` 兼容读取和 `chrome.storage.local`；不依赖远端数据库或同步服务。
+- 当前 schema 使用 `DATABASE_NAME = "ctool-local-v2"`、IndexedDB version 1；未来增 store 需推进数据库版本迁移。
 
 ## 可观测性与运维
 
-- 历史读写没有专用日志、指标或告警。
-- 损坏存储产生的异常可见于浏览器扩展页面控制台。
-- 仓库没有扩展升级、历史清理或部署步骤说明。
+- 历史 UI 显示任务状态、时间、状态码与错误说明；不会显示或渲染响应 HTML。
+- 超限、忙碌和 IndexedDB 错误作为界面内联消息反馈；没有遥测、后台服务或运维告警。
+- 原地升级要求保留原扩展数据和同一浏览器 profile；卸载旧扩展、清理站点数据或换 profile 会使旧 localStorage 不可见。
 
 ## 测试与验证
 
 ### 已执行
 
-- 静态源码核对 — 检查写入记录、历史页读取、窗口打开与消息发送代码；确认字段不匹配、无消息消费者及缺失样式文件。
-- 档案结构校验 — 分别对 `curl-request-workbench` 和 `curl-history` 运行 `feature_docs.py validate --repo . --id <feature-id> --mode structural`；两份档案均返回 `OK`。
-- 实现快照校验 — 运行 `feature_docs.py validate --repo . --mode fresh`；返回 `OK all feature documents`，对应 `HEAD 562904fe8954` 和干净的实现快照。
+- `npm test` — 43 项通过；包括最近 100 条上限、并发写入、事务回滚、quota 错误、损坏和原始旧格式迁移、恢复中断。
+- `npm run test:extension` — 16 项通过；Popup 关闭后请求完成并可在重新打开界面后在历史中找到，隐私模式和恢复 UI 通过。
+- `npm run check` — 类型检查、ESLint、单元、扩展 E2E 与 ZIP 白名单检查全部通过。
 
 ### 未执行
 
-- 浏览器历史窗口与恢复回归 — 仓库未提供浏览器自动化测试，本次未执行。
-- 存储损坏、并发写入和敏感值生命周期测试 — 仓库没有相应测试套件，本次未执行。
+- 原有已安装用户的 Chrome/Edge profile 升级回归 — 未在真实安装的扩展 profile 运行；自动化使用 Playwright 配套 Chromium。剩余风险是各品牌 profile 的旧数据访问与扩展安装行为。
 
 ## 关键决策
 
-不适用：仓库未记录独立的历史产品决策；十条上限、写入时机和存储字段仅作为当前实现记录，不推断为长期产品约束。
+### DEC-001 — 历史与响应正文分开存储
+
+- **决定**：历史保存终态和请求，不把大响应正文塞入历史；响应 store 单独限容。
+- **原因**：历史搜索轻量、容量可控，同时提供短期原文下载。
+- **取舍**：响应原文过期后仍保留历史终态，但不再能下载旧 body。
+- **证据**：`src/shared/request-executor.js`、`src/shared/storage/repositories.js` 和 response retention 测试。
+
+### DEC-002 — 旧历史只在事务完成后标记
+
+- **决定**：迁移记录和 `legacyCurlHistoryV1` meta 在单个 IndexedDB 事务写入。
+- **原因**：保护已有历史，不留下错误的迁移完成状态。
+- **取舍**：损坏的旧内容留在旧 localStorage 中等待修复，不自动清除。
+- **证据**：`src/shared/storage/migrate-legacy.js`、`tests/unit/migration.test.js`。
 
 ## 已知问题与后续工作
 
-### Apply 数据字段不匹配且没有消息消费者
+### 品牌浏览器升级尚未实测
 
-- **影响**：历史记录使用 `curl`，按钮代码读取 `entry.command`；即使命令正确，主弹窗也没有 `APPLY_COMMAND` 消息监听器。
-- **当前处理**：档案将恢复功能标为未接通，不描述为可用行为。
-- **后续动作**：后续修复前需确认预期的恢复目标和窗口消息契约，再补充端到端验证。
+- **影响**：自动化测试不能证明 Chrome/Edge 真实 profile 的升级数据读取行为。
+- **当前处理**：实现按原扩展 localStorage 结构迁移；单测覆盖旧 `data.parameters`、对象形式 headers 和 JSON payload。
+- **后续动作**：在保有旧版本数据的测试 profile 原地升级，确认迁移条数和重复启动不重复导入。
 
-### 历史值未经转义且页面样式缺失
+### 历史记录仍包含用户请求信息
 
-- **影响**：用户可控 URL 等值写入 `innerHTML`，存在 DOM 注入风险；页面引用的样式文件不存在。
-- **当前处理**：本次只记录源码事实，没有改写页面。
-- **后续动作**：后续维护时应使用安全 DOM 渲染，并确认历史页样式归属。
-
-### localStorage 解析没有恢复机制
-
-- **影响**：存储内容损坏时 `JSON.parse` 可中断页面初始化；并发写入没有合并处理。
-- **当前处理**：读取和写入按现有实现工作，没有额外恢复层。
-- **后续动作**：如需增强可靠性，应定义损坏数据恢复和多窗口写入策略。
+- **影响**：未开启隐私模式时，URL、头和请求内容可能包含秘密。
+- **当前处理**：本机存储、不云同步；提供隐私模式与用户主动清空；备份提醒数据敏感。
+- **后续动作**：维护文档中继续明确数据保留和卸载行为，用户应自行删除敏感历史。
 
 ## 变更记录
 
-### 2026-11-04 — 首次建立功能档案
+### 2026-11-12 — 从 localStorage 历史升级为 IndexedDB
 
-- **状态**：已完成
-- **变化**：新增请求历史的存储模型、窗口流程和已确认限制档案。
-- **原因**：为后续维护提供可由仓库证据追溯的上下文。
-- **兼容性**：仅新增文档，不修改扩展运行时、接口或本地数据。
-- **验证**：静态核对历史写入方、读取方和页面入口；两份档案结构校验均返回 `OK`，实现快照校验返回 `OK all feature documents`。
+- **状态**：部分完成
+- **变化**：历史限 100 条，分离短期响应，事务写入终态，增加搜索/删除/恢复/隐私开关及旧数据迁移。
+- **原因**：为本机优先工作流提供稳定管理和升级兼容。
+- **兼容性**：尽力迁移旧 `curlHistory`；保留 `popup/view/popup.html` 入口；恢复历史中的 multipart 需重选文件。
+- **验证**：`npm test`、`npm run test:extension` 与 `npm run check` 通过；实际 profile 回归仍待执行。

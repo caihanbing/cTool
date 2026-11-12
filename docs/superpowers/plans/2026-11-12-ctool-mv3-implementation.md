@@ -94,7 +94,7 @@
 
 ### Task 8: Cross-browser review and delivery
 
-**Files:** .github/workflows/ci.yml, docs/features/{curl-request-workbench,curl-history,index}.md, docs/work-items/WORK-20261112-001.md.
+**Files:** .github/workflows/ci.yml, docs/features/{curl-request-workbench,curl-history,environment-variables,saved-requests,index}.md, docs/work-items/WORK-20261112-001.md, docs/work-items/WORK-20261112-001.md.
 
 - [x] Run typecheck, lint, 43 unit tests, 16 extension E2E tests and package checks; all pass.
 - [ ] Install unpacked build in stable Chrome and Edge; verify local request, Cookie, popup close/reopen, and multipart. Versions are known, but UI installation has not been verified in this session.
