@@ -1,19 +1,23 @@
 {
-    "manifest_version": 3,
-    "name": "cTool",
-    "version": "1.0",
-    "permissions": [
-        "storage",
-        "downloads",
-        "clipboardRead"
-    ],
-    "host_permissions": [
-        "<all_urls>"
-    ],
-    "background": {
-        "service_worker": "background/background.js"
-    },
-    "action": {
-        "default_popup": "popup/view/popup.html"
-    }
+  "manifest_version": 3,
+  "name": "cTool",
+  "version": "2.0.0",
+  "description": "A local-first cURL request workbench for Chrome and Edge.",
+  "permissions": [
+    "storage",
+    "downloads",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/view/popup.html",
+    "default_title": "cTool"
+  }
 }

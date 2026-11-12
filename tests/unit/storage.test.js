@@ -67,6 +67,23 @@ test("a failed IndexedDB transaction rolls back all writes", async () => {
   } finally { state.close(); }
 });
 
+test("the active request lock is global, atomic, and only released by its owner", async () => {
+  const state = await repositorySet();
+  try {
+    const [first, second] = await Promise.all([
+      state.repositories.acquireActiveTask({ taskId: "task-a", owner: "popup" }),
+      state.repositories.acquireActiveTask({ taskId: "task-b", owner: "workbench" })
+    ]);
+    assert.equal([first, second].filter(({ acquired }) => acquired).length, 1);
+    const active = await state.repositories.getActiveTask();
+    assert.ok(["task-a", "task-b"].includes(active.taskId));
+    assert.equal(await state.repositories.releaseActiveTask("not-the-owner"), false);
+    assert.equal((await state.repositories.getActiveTask()).taskId, active.taskId);
+    assert.equal(await state.repositories.releaseActiveTask(active.taskId), true);
+    assert.equal(await state.repositories.getActiveTask(), null);
+  } finally { state.close(); }
+});
+
 test("response bodies expire after 24 hours and only ten are retained", async () => {
   const state = await repositorySet();
   try {

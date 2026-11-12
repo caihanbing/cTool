@@ -1,5 +1,5 @@
 /** @typedef {{id:string, name:string, value:string, enabled:boolean}} ValueRow */
-/** @typedef {{id:string, name:string, value:string, enabled:boolean, isFile?:boolean, fileName?:string, fileType?:string, filePathHint?:string}} FormField */
+/** @typedef {{id:string, name:string, value:string, enabled:boolean, isFile?:boolean, fileName?:string, fileType?:string, filePathHint?:string, fileData?:string}} FormField */
 /** @typedef {{type:'none'} | {type:'basic',username:string,password:string} | {type:'bearer',token:string}} AuthConfig */
 /** @typedef {{type:'none'|'json'|'text'|'urlencoded'|'multipart',text:string,fields:FormField[]}} RequestBody */
 /** @typedef {{id:string,name:string,method:string,url:string,query:ValueRow[],headers:ValueRow[],auth:AuthConfig,body:RequestBody,redirectMode:'error'|'follow',timeoutMs:number,environmentId:string|null}} RequestDraft */
@@ -58,7 +58,7 @@ export function createRequestDraft(input = {}) {
   const body = {
     type: inputBodyType === "json" || inputBodyType === "text" || inputBodyType === "urlencoded" || inputBodyType === "multipart" ? inputBodyType : "none",
     text: text(bodyInput.text),
-    fields: (bodyInput.fields ?? []).map((field) => ({ ...valueRow(field), ...(field.isFile ? { isFile: true } : {}), ...(field.fileName ? { fileName: text(field.fileName) } : {}), ...(field.fileType ? { fileType: text(field.fileType) } : {}), ...(field.filePathHint ? { filePathHint: text(field.filePathHint) } : {}) }))
+    fields: (bodyInput.fields ?? []).map((field) => ({ ...valueRow(field), ...(field.isFile ? { isFile: true } : {}), ...(field.fileName ? { fileName: text(field.fileName) } : {}), ...(field.fileType ? { fileType: text(field.fileType) } : {}), ...(field.filePathHint ? { filePathHint: text(field.filePathHint) } : {}), ...(field.fileData ? { fileData: text(field.fileData) } : {}) }))
   };
   return {
     id: input.id ?? crypto.randomUUID(),
@@ -105,4 +105,16 @@ export function validateRequestDraft(draft) {
   if (getAuthorizationConflict(draft)) errors.push({ code: "AUTHORIZATION_CONFLICT", message: "Choose either the configured authentication or the Authorization header." });
   if ((draft.method === "GET" || draft.method === "HEAD") && draft.body.type !== "none") errors.push({ code: "BODY_METHOD_CONFLICT", message: `${draft.method} requests cannot include a body in the browser transport.` });
   return errors;
+}
+
+/** Remove local file paths and selected file bytes before persistence or history. @param {RequestDraft} draft */
+export function stripFileAttachments(draft) {
+  const copy = structuredClone(draft);
+  copy.body.fields = copy.body.fields.map((field) => {
+    const safe = { ...field };
+    delete safe.fileData;
+    delete safe.filePathHint;
+    return safe;
+  });
+  return copy;
 }

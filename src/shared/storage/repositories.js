@@ -148,6 +148,63 @@ export function createRepositories(db) {
     async getGlobalVariables() { return (await get("meta", "globalVariables"))?.value ?? []; },
     /** @param {Array<{id?:string,name:string,value:string,secret?:boolean}>} variables */
     async saveGlobalVariables(variables) { await transact(db, "meta", "readwrite", (tx) => requestResult(tx.objectStore("meta").put({ id: "globalVariables", key: "globalVariables", value: structuredClone(variables) }))); },
+    async getActiveTask() { return (await get("meta", "activeTask"))?.value ?? null; },
+    /** @param {DbRecord} task */
+    async acquireActiveTask(task) {
+      return transact(db, "meta", "readwrite", async (tx) => {
+        const store = tx.objectStore("meta");
+        const current = (await requestResult(store.get("activeTask")))?.value;
+        if (current?.status === "running") return { acquired: false, active: current };
+        await requestResult(store.put({ id: "activeTask", key: "activeTask", value: { ...structuredClone(task), status: "running", lastHeartbeat: Date.now() } }));
+        return { acquired: true, active: null };
+      });
+    },
+    /** @param {string} taskId */
+    async heartbeatActiveTask(taskId) {
+      return transact(db, "meta", "readwrite", async (tx) => {
+        const store = tx.objectStore("meta");
+        const record = await requestResult(store.get("activeTask"));
+        if (record?.value?.taskId !== taskId) return false;
+        record.value.lastHeartbeat = Date.now();
+        await requestResult(store.put(record));
+        return true;
+      });
+    },
+    /** @param {string} taskId */
+    async releaseActiveTask(taskId) {
+      return transact(db, "meta", "readwrite", async (tx) => {
+        const store = tx.objectStore("meta");
+        const record = await requestResult(store.get("activeTask"));
+        if (record?.value?.taskId !== taskId) return false;
+        await requestResult(store.delete("activeTask"));
+        return true;
+      });
+    },
+    /** @param {{taskId:string,historyRecord?:DbRecord,responseRecord?:DbRecord,now?:number}} input */
+    async completeTask({ taskId, historyRecord, responseRecord, now = Date.now() }) {
+      return transact(db, ["meta", "history", "responses"], "readwrite", async (tx) => {
+        const meta = tx.objectStore("meta");
+        const active = await requestResult(meta.get("activeTask"));
+        if (active?.value?.taskId !== taskId) return false;
+        if (historyRecord) {
+          const history = tx.objectStore("history");
+          await requestResult(history.put(structuredClone(historyRecord)));
+          const entries = await requestResult(history.getAll());
+          entries.sort((a, b) => recordTime(b) - recordTime(a));
+          for (const stale of entries.slice(HISTORY_LIMIT)) await requestResult(history.delete(stale.id));
+        }
+        if (responseRecord) {
+          const responses = tx.objectStore("responses");
+          await requestResult(responses.put({ ...structuredClone(responseRecord), receivedAt: responseRecord.receivedAt ?? now }));
+          const entries = await requestResult(responses.getAll());
+          entries.sort((a, b) => recordTime(b) - recordTime(a));
+          const fresh = entries.filter((entry) => recordTime(entry) >= now - RESPONSE_RETENTION_MS);
+          for (const stale of entries.filter((entry) => recordTime(entry) < now - RESPONSE_RETENTION_MS).concat(fresh.slice(RESPONSE_LIMIT))) await requestResult(responses.delete(stale.id));
+        }
+        await requestResult(meta.delete("activeTask"));
+        return true;
+      });
+    },
     /** @param {DbRecord[]} records */
     async importLegacyHistory(records) {
       return transact(db, ["history", "meta"], "readwrite", async (tx) => {
